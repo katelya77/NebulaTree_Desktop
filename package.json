@@ -1,0 +1,37 @@
+{
+  "name": "nebulatree-desktop",
+  "version": "1.0.0",
+  "description": "Cyberpunk Particle Tree - Electron Desktop App",
+  "main": "main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --publish never"
+  },
+  "keywords": [
+    "electron",
+    "threejs",
+    "mediapipe",
+    "3d",
+    "cyberpunk"
+  ],
+  "author": "Wang YiZhang",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.nebulatree.app",
+    "productName": "NebulaTree",
+    "files": [
+      "main.js",
+      "index.html"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
+  }
+}
