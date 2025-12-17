@@ -7,6 +7,9 @@ on:
       - 'V*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-windows-portable:
     runs-on: windows-latest
@@ -37,6 +40,5 @@ jobs:
         with:
           files: |
             dist/*.exe
-          overwrite: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          overwrite_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
