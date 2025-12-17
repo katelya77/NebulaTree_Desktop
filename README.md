@@ -14,7 +14,7 @@
 
 ## 目录结构
 
-```
+```text
 NebulaTree_Desktop/
 ├─ index.html          # 前端页面（含 import map & 逻辑）
 ├─ main.js             # Electron 主进程
@@ -22,7 +22,6 @@ NebulaTree_Desktop/
 ├─ .gitignore          # 忽略构建产物
 └─ README.md           # 使用说明
 ```
-
 
 ---
 
@@ -62,10 +61,12 @@ npm run build
 ```
 
 默认产物：
+
 - 主要：dist\NebulaTree.exe（若 electron-builder 成功生成 portable）
 - 备用：dist\win-unpacked\NebulaTree.exe（未签名的解包目录，可直接运行）
 
 如果遇到 electron-builder 在下载/解压 `winCodeSign` 时报「无法创建符号链接/权限不足」：
+
 - 方案 A（推荐）：在 Windows 设置 → 开发者选项 中开启「开发人员模式」（允许符号链接）后重试。
 - 方案 B（应急）：使用 `dist\win-unpacked\NebulaTree.exe` 作为便携运行文件（可直接双击运行）。
 
@@ -80,6 +81,7 @@ npm run build
   - 允许 `mediastream:`、`blob:`、WebGL 运行所需的源
 
 如需更严格的生产安全策略，可在上云前收敛：
+
 - 关闭 `nodeIntegration` 与开启 `contextIsolation`
 - 移除 `'unsafe-inline'` / `'unsafe-eval'`，将脚本改为文件形式并加 Subresource Integrity
 
@@ -97,7 +99,6 @@ npm run build
   - A：检查是否有其它程序占用摄像头；或在 Windows 隐私设置中开启应用的摄像头权限。
 
 ---
-
 
 ## 许可
 

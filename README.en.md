@@ -14,7 +14,7 @@ Cyberpunk-styled 3D particle tree powered by Three.js + MediaPipe hand-tracking,
 
 ## Project Structure
 
-```
+```text
 NebulaTree_Desktop/
 ├─ index.html          # Frontend page (import maps + app logic)
 ├─ main.js             # Electron main process
@@ -64,10 +64,12 @@ npm run build
 ```
 
 Expected outputs:
+
 - Primary: `dist\NebulaTree.exe` (portable exe on success)
 - Fallback (always runnable): `dist\win-unpacked\NebulaTree.exe` (requires its adjacent files)
 
 If you see winCodeSign/symlink errors on Windows:
+
 - Recommended: enable Windows "Developer Mode" (allows symlinks) and re-run build.
 - Temporary fallback: use `dist\win-unpacked\NebulaTree.exe` directly (it runs without installer, but isn’t single-file).
 
@@ -82,6 +84,7 @@ If you see winCodeSign/symlink errors on Windows:
   - Enables `mediastream:`, `blob:`, and WebGL related resources.
 
 For production hardening:
+
 - Turn off `nodeIntegration` and enable `contextIsolation`.
 - Remove `'unsafe-inline'` / `'unsafe-eval'`, move inline scripts to files, add Subresource Integrity.
 
