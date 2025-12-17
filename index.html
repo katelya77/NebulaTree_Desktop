@@ -453,7 +453,9 @@
             camera.lookAt(0, 10, 0);
 
             const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: "high-performance" });
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            // Adaptive DPR: start conservative to avoid DPI overhead on small windows
+            let targetDPR = Math.min(window.devicePixelRatio || 1, 1.25);
+            renderer.setPixelRatio(targetDPR);
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.toneMapping = THREE.ReinhardToneMapping;
             container.appendChild(renderer.domElement);
@@ -462,7 +464,7 @@
             const renderPass = new RenderPass(scene, camera);
             const bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(window.innerWidth, window.innerHeight),
-                1.8, 0.4, 0.2
+                1.6, 0.4, 0.2
             );
             const composer = new EffectComposer(renderer);
             composer.addPass(renderPass);
@@ -534,6 +536,8 @@
             let currentScale = 1.0;
             let currentTurbulence = 1.0;
             const clock = new THREE.Clock();
+            // FPS tracking for dynamic quality
+            let fpsSum = 0, fpsCount = 0, physicsStride = 1, frameIndex = 0;
 
             function animate() {
                 requestAnimationFrame(animate);
@@ -541,6 +545,7 @@
                 const delta = clock.getDelta();
                 const time = clock.getElapsedTime();
                 state.fps = Math.round(1 / delta);
+                fpsSum += state.fps; fpsCount++;
 
                 const hand = state.handData;
                 const positionsArr = geometry.attributes.position.array;
@@ -565,7 +570,7 @@
                 }
 
                 // --- Physics Loop ---
-                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                for (let i = 0; i < PARTICLE_COUNT; i += physicsStride) {
                     const i3 = i * 3;
                     
                     const px = positionsArr[i3], py = positionsArr[i3+1], pz = positionsArr[i3+2];
@@ -616,6 +621,26 @@
 
                 geometry.attributes.position.needsUpdate = true;
                 composer.render();
+
+                // Every ~30 frames, adjust quality knobs based on average FPS
+                if ((frameIndex++ % 30) === 0) {
+                    const avg = fpsSum / Math.max(1, fpsCount);
+                    // Dynamic DPR scaling
+                    if (avg < 45 && targetDPR > 0.85) {
+                        targetDPR = Math.max(0.75, targetDPR - 0.1);
+                        renderer.setPixelRatio(targetDPR);
+                        composer.setSize(window.innerWidth, window.innerHeight);
+                    } else if (avg > 58 && targetDPR < 1.5) {
+                        targetDPR = Math.min(1.5, targetDPR + 0.1);
+                        renderer.setPixelRatio(targetDPR);
+                        composer.setSize(window.innerWidth, window.innerHeight);
+                    }
+                    // Physics stride: skip some particles when FPS is low
+                    if (avg < 35) physicsStride = 3; else if (avg < 48) physicsStride = 2; else physicsStride = 1;
+                    // Tone bloom slightly to save cost when FPS drops
+                    bloomPass.strength = avg < 40 ? 1.2 : 1.6;
+                    fpsSum = 0; fpsCount = 0;
+                }
             }
 
             animate();
@@ -624,6 +649,9 @@
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
+                // Re-evaluate DPR on resize (small windows are more sensitive)
+                targetDPR = Math.min(window.devicePixelRatio || 1, 1.25);
+                renderer.setPixelRatio(targetDPR);
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 composer.setSize(window.innerWidth, window.innerHeight);
             });
@@ -838,12 +866,16 @@
 
                 // Game Loop
                 const loopClock = new THREE.Clock();
+                let lastDetect = 0; const DETECT_INTERVAL_MS = 33; // ~30 FPS for vision
                 
                 function loop() {
                     const time = loopClock.getElapsedTime();
 
-                    // Vision Detection
-                    visionService.detect((result) => {
+                    // Vision Detection (throttled)
+                    const now = performance.now();
+                    if (now - lastDetect >= DETECT_INTERVAL_MS) {
+                        lastDetect = now;
+                        visionService.detect((result) => {
                         const detectedHands = result.landmarks || [];
                         const count = detectedHands.length;
 
@@ -937,8 +969,9 @@
                                 }
                             });
                         }
-                        renderer.render(scene, camera);
-                    });
+                            renderer.render(scene, camera);
+                        });
+                    }
 
                     updateHUD();
                     requestAnimationFrame(loop);
